@@ -64,9 +64,7 @@
       <AdditionalDependencies>wsock32.lib;steam_api.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Shared\steam\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
-    <PostBuildEvent>
-      <Command>copy /Y "$(TargetPath)" "D:\Games\Steam\steamapps\common\Half-Life\cstrike.exe"</Command>
-    </PostBuildEvent>
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -87,9 +85,7 @@
       <AdditionalDependencies>wsock32.lib;steam_api.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Shared\steam\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
-    <PostBuildEvent>
-      <Command>copy /Y "$(TargetPath)" "D:\Games\Steam\steamapps\common\Half-Life\cstrike.exe"</Command>
-    </PostBuildEvent>
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Shared\CommandLine.cpp" />
