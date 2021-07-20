@@ -29,4 +29,6 @@ If you want to play on public servers, launch the game through Steam (it will ru
 
 This project is licensed under MIT License.
 
+This project used some files from the Half-Life SDK. The license is available at https://github.com/ValveSoftware/halflife/blob/master/LICENSE.
+
 This project uses Steamworks SDK. The license is available at https://partner.steamgames.com/documentation/sdk_access_agreement. 
