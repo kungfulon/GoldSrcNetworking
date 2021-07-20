@@ -63,6 +63,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     auto waitResult = WaitForSingleObject(mutex, 0);
     if (waitResult != WAIT_OBJECT_0 && waitResult != WAIT_ABANDONED) {
         MessageBoxA(0, "Could not launch game.\nOnly one instance of this game can be run at a time.", "Error", MB_OK | MB_ICONERROR);
+        return 0;
     }
 
     WSADATA wsaData;
