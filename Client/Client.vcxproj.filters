@@ -1,0 +1,207 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Client">
+      <UniqueIdentifier>{363ec433-8bd4-4162-ac69-ba48ec206bcf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shared">
+      <UniqueIdentifier>{e6eedb5a-4619-4530-8de5-01c0a24ee1c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Shared">
+      <UniqueIdentifier>{f6baa887-ab47-4535-9475-8fb9beb1302c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Shared\steam">
+      <UniqueIdentifier>{1bf1fb60-dcff-4a54-a759-553c70a1c66c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Client">
+      <UniqueIdentifier>{76d69785-5f10-4427-b13f-d0afd494f760}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Shared\CommandLine.cpp">
+      <Filter>Source Files\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Shared\interface.cpp">
+      <Filter>Source Files\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="launcher.cpp">
+      <Filter>Source Files\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Shared\detour.cpp">
+      <Filter>Source Files\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks.cpp">
+      <Filter>Source Files\Client</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Shared\ienginelauncherapi.h">
+      <Filter>Header Files\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\interface.h">
+      <Filter>Header Files\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\archtypes.h">
+      <Filter>Header Files\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\FileSystem.h">
+      <Filter>Header Files\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\ICommandLine.h">
+      <Filter>Header Files\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamgamecoordinator.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamgameserver.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamgameserverstats.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamhtmlsurface.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamhttp.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteaminput.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteaminventory.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteammasterserverupdater.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteammatchmaking.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteammusic.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteammusicremote.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamnetworking.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamnetworkingmessages.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamnetworkingsockets.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamnetworkingutils.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamparentalsettings.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamps3overlayrenderer.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamremoteplay.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamremotestorage.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamscreenshots.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamugc.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamuser.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamuserstats.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamutils.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamvideo.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\matchmakingtypes.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\steam_api.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\steam_api_common.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\steam_api_flat.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\steam_api_internal.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\steam_gameserver.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\steamclientpublic.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\steamdatagram_tickets.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\steamencryptedappticket.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\steamhttpenums.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\steamnetworkingtypes.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\steamps3params.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\steamtypes.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\steamuniverse.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamapplist.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamapps.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamappticket.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamclient.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamcontroller.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\steam\isteamfriends.h">
+      <Filter>Header Files\Shared\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\detour.h">
+      <Filter>Header Files\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks.h">
+      <Filter>Header Files\Client</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
