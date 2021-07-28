@@ -28,11 +28,15 @@ typedef struct netadr_s {
 static constexpr const BYTE stringToAdrPattern[] =
 { 0x55, 0x8B, 0xEC, 0x83, 0xEC, 0x10, 0x56, 0x8B, 0x75, 0x08, 0x68, 0xCC, 0xCC, 0xCC, 0xCC, 0x56, 0xE8, 0x9B, 0x1F, 0xFC, 0xFF, 0x83, 0xC4, 0x08, 0x85, 0xC0, 0x74, 0x42 };
 
+static constexpr const BYTE adrToStringPattern[] =
+{ 0x55, 0x8B, 0xEC, 0x6A, 0x40, 0x6A, 0x00, 0x68, 0xCC, 0xCC, 0xCC, 0xCC, 0xE8, 0x2F, 0x22, 0xFC, 0xFF, 0x8B, 0x45, 0x08, 0x83, 0xC4, 0x0C, 0x83, 0xF8, 0x01, 0x75, 0x1B };
+
 static Hook* hookSendTo;
 static Hook* hookRecvFrom;
 static Hook* hookSteamInit;
 static Hook* hookSteamShutdown;
 static Hook* hookStringToAdr;
+static Hook* hookAdrToString;
 static ISteamClient012* steamClient;
 static ISteamNetworkingMessages* networkingMessages;
 
@@ -146,6 +150,34 @@ int NET_StringToAdr(char* s, netadr_t* a) {
     return 1;
 }
 
+char* NET_AdrToString(netadr_t a) {
+    static char buf[64];
+    memset(buf, 0, sizeof(buf));
+    
+    if (a.type == NA_LOOPBACK) {
+        _snprintf(buf, sizeof(buf), "loopback");
+        return buf;
+    }
+
+    int port = ntohs(a.port);
+    if (a.type == NA_IP) {
+        if (port == 1) {
+            uint32 accountID = *(uint32*)a.ip;
+            _snprintf(buf, sizeof(buf), "STEAM_%u:%u:%u", k_EUniversePublic, accountID & 1, accountID >> 1);
+        }
+        else {
+            _snprintf(buf, sizeof(buf), "%i.%i.%i.%i:%i", a.ip[0], a.ip[1], a.ip[2], a.ip[3], port);
+        }
+        return buf;
+    }
+    
+    _snprintf(buf, sizeof(buf), "%02x%02x%02x%02x:%02x%02x%02x%02x%02x%02x:%i",
+        a.ipx[0], a.ipx[1], a.ipx[2], a.ipx[3], a.ipx[4],
+        a.ipx[5], a.ipx[6], a.ipx[7], a.ipx[8], a.ipx[9],
+        port);
+    return buf;
+}
+
 void SetupLibraryHooks() {
     hookSendTo = new Hook(sendto, SendTo);
     hookSendTo->Enable();
@@ -165,5 +197,11 @@ void SetupEngineHooks(CSysModule* engineModule) {
     if (stringToAdrAddr != nullptr) {
         hookStringToAdr = new Hook(stringToAdrAddr, NET_StringToAdr);
         hookStringToAdr->Enable();
+    }
+
+    auto adrToStringAddr = ScanPattern(engineModule, adrToStringPattern, sizeof(adrToStringPattern));
+    if (adrToStringAddr != nullptr) {
+        hookAdrToString = new Hook(adrToStringAddr, NET_AdrToString);
+        hookAdrToString->Enable();
     }
 }
