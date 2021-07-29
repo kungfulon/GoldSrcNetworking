@@ -74,20 +74,23 @@ int WSAAPI RecvFrom(SOCKET s, char* buf, int len, int flags, struct sockaddr* fr
     if (networkingMessages->ReceiveMessagesOnChannel(0, &msg, 1) != 1) {
         return _recvfrom(s, buf, len, flags, from, fromlen);
     }
-    if (len < (int)msg->GetSize()) {
+
+    int msgLen = (int)msg->GetSize();
+    if (len < msgLen) {
         msg->Release();
         WSASetLastError(WSAEMSGSIZE);
         return SOCKET_ERROR;
     }
+
     auto* addr = (sockaddr_in*)from;
     addr->sin_family = AF_INET;
     addr->sin_addr.S_un.S_addr = msg->m_identityPeer.GetSteamID().GetAccountID();
     addr->sin_port = htons(1);
     memset(addr->sin_zero, 0, sizeof(addr->sin_zero));
-    memcpy(buf, msg->GetData(), msg->GetSize());
+    memcpy(buf, msg->GetData(), msgLen);
     msg->Release();
     WSASetLastError(0);
-    return msg->GetSize();
+    return msgLen;
 }
 
 typedef bool (*tSteamAPI_Init)();
