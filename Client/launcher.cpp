@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <io.h>
 
+#include <detour.h>
 #include <ienginelauncherapi.h>
 
 static constexpr const char* fileSystemDll = "filesystem_stdio.dll";
@@ -94,6 +95,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     // TODO: Registry
 
+    InitializeDetour();
     SetupLibraryHooks();
     bool shouldRestart = false;
     do {
@@ -166,6 +168,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         Sys_UnloadModule(fileSystemModule);
     } while (shouldRestart);
 
+    ShutdownDetour();
     ReleaseMutex(mutex);
     CloseHandle(mutex);
     WSACleanup();

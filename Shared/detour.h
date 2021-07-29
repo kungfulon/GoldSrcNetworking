@@ -1,18 +1,9 @@
 #pragma once
 
-BYTE* ScanPattern(CSysModule* module, const BYTE* pattern, int patternLen);
+#include "archtypes.h"
 
-class Hook {
-public:
-    Hook(void* addr, void* hookFunc);
-    void Enable();
-    void Disable();
-    void* Addr() {
-        return addr;
-    };
-
-private:
-    void* addr;
-    unsigned char unpatchedBytes[5];
-    unsigned char patchedBytes[5];
-};
+uint8* ScanPattern(CSysModule* module, const uint8* pattern, int patternLen);
+bool InitializeDetour();
+void ShutdownDetour();
+void* InstallHook(void* addr, void* hookFunc);
+void UninstallHook(void* hook);

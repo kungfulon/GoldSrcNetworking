@@ -31,12 +31,6 @@ static constexpr const BYTE stringToAdrPattern[] =
 static constexpr const BYTE adrToStringPattern[] =
 { 0x55, 0x8B, 0xEC, 0x6A, 0x40, 0x6A, 0x00, 0x68, 0xCC, 0xCC, 0xCC, 0xCC, 0xE8, 0x2F, 0x22, 0xFC, 0xFF, 0x8B, 0x45, 0x08, 0x83, 0xC4, 0x0C, 0x83, 0xF8, 0x01, 0x75, 0x1B };
 
-static Hook* hookSendTo;
-static Hook* hookRecvFrom;
-static Hook* hookSteamInit;
-static Hook* hookSteamShutdown;
-static Hook* hookStringToAdr;
-static Hook* hookAdrToString;
 static ISteamClient012* steamClient;
 static ISteamNetworkingMessages* networkingMessages;
 
@@ -49,13 +43,13 @@ void P2PCallbacks::OnSessionRequest(SteamNetworkingMessagesSessionRequest_t *par
     networkingMessages->AcceptSessionWithUser(param->m_identityRemote);
 }
 
+typedef int (WSAAPI* tsendto)(SOCKET s, const char* buf, int len, int flags, const struct sockaddr* to, int tolen);
+static tsendto _sendto;
+
 int WSAAPI SendTo(SOCKET s, const char* buf, int len, int flags, const struct sockaddr* to, int tolen) {
     auto* addr = (const sockaddr_in*)to;
     if (addr->sin_port != htons(1)) {
-        hookSendTo->Disable();
-        int result = sendto(s, buf, len, flags, to, tolen);
-        hookSendTo->Enable();
-        return result;
+        return _sendto(s, buf, len, flags, to, tolen);
     }
 
     // Only support individual for now.
@@ -72,16 +66,13 @@ int WSAAPI SendTo(SOCKET s, const char* buf, int len, int flags, const struct so
     return len;
 }
 
+typedef int (WSAAPI* trecvfrom)(SOCKET s, char* buf, int len, int flags, struct sockaddr* from, int* fromlen);
+static trecvfrom _recvfrom;
+
 int WSAAPI RecvFrom(SOCKET s, char* buf, int len, int flags, struct sockaddr* from, int* fromlen) {
     SteamNetworkingMessage_t* msg;
     if (networkingMessages->ReceiveMessagesOnChannel(0, &msg, 1) != 1) {
-        hookRecvFrom->Disable();
-        int result = recvfrom(s, buf, len, flags, from, fromlen);
-        if (result != SOCKET_ERROR) {
-            WSASetLastError(0);
-        }
-        hookRecvFrom->Enable();
-        return result;
+        return _recvfrom(s, buf, len, flags, from, fromlen);
     }
     if (len < (int)msg->GetSize()) {
         msg->Release();
@@ -99,12 +90,11 @@ int WSAAPI RecvFrom(SOCKET s, char* buf, int len, int flags, struct sockaddr* fr
     return msg->GetSize();
 }
 
-bool SteamInit() {
-    hookSteamInit->Disable();
-    bool result = SteamAPI_Init();
-    hookSteamInit->Enable();
+typedef bool (*tSteamAPI_Init)();
+static tSteamAPI_Init _SteamAPI_Init;
 
-    if (!result) {
+bool SteamInit() {
+    if (!_SteamAPI_Init()) {
         return false;
     }
 
@@ -116,24 +106,24 @@ bool SteamInit() {
     return true;
 }
 
+typedef void (*tSteamAPI_Shutdown)();
+static tSteamAPI_Shutdown _SteamAPI_Shutdown;
+
 void SteamShutdown() {
     if (p2pCallbacks != nullptr) {
         delete p2pCallbacks;
         p2pCallbacks = nullptr;
     }
 
-    hookSteamShutdown->Disable();
-    SteamAPI_Shutdown();
-    hookSteamShutdown->Enable();
+    _SteamAPI_Shutdown();
 }
+
+typedef int (*tNET_StringToAdr)(char* s, netadr_t* a);
+static tNET_StringToAdr _NET_StringToAdr;
 
 int NET_StringToAdr(char* s, netadr_t* a) {
     if (strncmp(s, "STEAM_", 6)) {
-        hookStringToAdr->Disable();
-        auto stringToAdr = (int (*)(char*, netadr_t*))hookStringToAdr->Addr();
-        int result = stringToAdr(s, a);
-        hookStringToAdr->Enable();
-        return result;
+        return _NET_StringToAdr(s, a);
     }
 
     EUniverse universe;
@@ -149,6 +139,9 @@ int NET_StringToAdr(char* s, netadr_t* a) {
     a->type = NA_IP;
     return 1;
 }
+
+typedef char* (*tNET_AdrToString)(netadr_t a);
+static tNET_AdrToString _NET_AdrToString;
 
 char* NET_AdrToString(netadr_t a) {
     static char buf[64];
@@ -179,29 +172,20 @@ char* NET_AdrToString(netadr_t a) {
 }
 
 void SetupLibraryHooks() {
-    hookSendTo = new Hook(sendto, SendTo);
-    hookSendTo->Enable();
-
-    hookRecvFrom = new Hook(recvfrom, RecvFrom);
-    hookRecvFrom->Enable();
-
-    hookSteamInit = new Hook(SteamAPI_Init, SteamInit);
-    hookSteamInit->Enable();
-
-    hookSteamShutdown = new Hook(SteamAPI_Shutdown, SteamShutdown);
-    hookSteamShutdown->Enable();
+    _sendto = (tsendto)InstallHook(sendto, SendTo);
+    _recvfrom = (trecvfrom)InstallHook(recvfrom, RecvFrom);
+    _SteamAPI_Init = (tSteamAPI_Init)InstallHook(SteamAPI_Init, SteamInit);
+    _SteamAPI_Shutdown = (tSteamAPI_Shutdown)InstallHook(SteamAPI_Shutdown, SteamShutdown);
 }
 
 void SetupEngineHooks(CSysModule* engineModule) {
     auto stringToAdrAddr = ScanPattern(engineModule, stringToAdrPattern, sizeof(stringToAdrPattern));
     if (stringToAdrAddr != nullptr) {
-        hookStringToAdr = new Hook(stringToAdrAddr, NET_StringToAdr);
-        hookStringToAdr->Enable();
+        _NET_StringToAdr = (tNET_StringToAdr)InstallHook(stringToAdrAddr, NET_StringToAdr);
     }
 
     auto adrToStringAddr = ScanPattern(engineModule, adrToStringPattern, sizeof(adrToStringPattern));
     if (adrToStringAddr != nullptr) {
-        hookAdrToString = new Hook(adrToStringAddr, NET_AdrToString);
-        hookAdrToString->Enable();
+        _NET_AdrToString = (tNET_AdrToString)InstallHook(adrToStringAddr, NET_AdrToString);
     }
 }
