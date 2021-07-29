@@ -130,6 +130,7 @@ void* InstallHook(void* addr, void* hookFunc) {
     memcpyRWX(addr, patched, sizeof(patched));
 
     cs_free(ins, 1);
+    patchInfo[trampoline] = pi;
     return trampoline;
 }
 
