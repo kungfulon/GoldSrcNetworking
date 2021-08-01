@@ -1,5 +1,6 @@
-#include <ICommandLine.h>
 #include <FileSystem.h>
+#include "icommandline.h"
+#include "iregistry.h"
 #include "hooks.h"
 
 #define WIN32_LEAN_AND_MEAN
@@ -8,8 +9,7 @@
 #include <stdio.h>
 #include <io.h>
 
-#include <detour.h>
-#include <ienginelauncherapi.h>
+#include "ienginelauncherapi.h"
 
 static constexpr const char* fileSystemDll = "filesystem_stdio.dll";
 static constexpr const char* defaultExeName = "hl.exe";
@@ -22,8 +22,25 @@ static bool GetExecutablePath(char* out, int outSize) {
 }
 
 static const char* GetEngineDll() {
-    // TODO: Choose sw.dll and hw.dll
-    return "hw.dll";
+    const char* engineDLL = "hw.dll";
+    //auto registryEngineDll = registry->ReadString("EngineDLL", "hw.dll");
+
+    //if (!_strcmpi(registryEngineDll, "hw.dll")) {
+    //    engineDLL = "hw.dll";
+    //}
+    //else if (!_strcmpi(registryEngineDll, "sw.dll")) {
+    //    engineDLL = "sw.dll";
+    //}
+
+    //if (CommandLine()->HasParm("-soft") || CommandLine()->HasParm("-software")) {
+    //    engineDLL = "sw.dll";
+    //}
+    //else if (CommandLine()->HasParm("-gl") || CommandLine()->HasParm("-d3d")) {
+    //    engineDLL = "hw.dll";
+    //}
+
+    registry->WriteString("EngineDLL", engineDLL);
+    return engineDLL;
 }
 
 static CSysModule* LoadFilesystemModule(const char* root, bool runningSteam) {
@@ -33,17 +50,17 @@ static CSysModule* LoadFilesystemModule(const char* root, bool runningSteam) {
     }
 
     if (strchr(root, ';')) {
-        MessageBoxA(0, "Game cannot be run from directories containing the semicolon character (';')", "Fatal Error", MB_OK | MB_ICONERROR);
+        MessageBoxA(NULL, "Game cannot be run from directories containing the semicolon character (';')", "Fatal Error", MB_OK | MB_ICONERROR);
         return nullptr;
     }
 
     _finddata_t findData;
     auto findHandle = _findfirst(fileSystemDll, &findData);
     if (findHandle == -1) {
-        MessageBoxA(0, "Could not find filesystem dll to load.", "Fatal Error", MB_OK | MB_ICONERROR);
+        MessageBoxA(NULL, "Could not find filesystem dll to load.", "Fatal Error", MB_OK | MB_ICONERROR);
     }
     else {
-        MessageBoxA(0, "Could not load filesystem dll.\nFileSystem crashed during construction.", "Fatal Error", MB_OK | MB_ICONERROR);
+        MessageBoxA(NULL, "Could not load filesystem dll.\nFileSystem crashed during construction.", "Fatal Error", MB_OK | MB_ICONERROR);
         _findclose(findHandle);
     }
 
@@ -51,7 +68,10 @@ static CSysModule* LoadFilesystemModule(const char* root, bool runningSteam) {
 }
 
 static bool FallbackVideoMode() {
-    // TODO: Registry
+    registry->WriteInt("ScreenBPP", 16);
+    registry->WriteInt("ScreenHeight", 640);
+    registry->WriteInt("ScreenWidth", 480);
+    registry->WriteString("EngineDLL", "hw.dll");
     return MessageBoxA(NULL, "The specified video mode is not supported.\nThe game will now run in gl mode.", "Video mode change failure", MB_OKCANCEL | MB_ICONWARNING) == 1;
 }
 
@@ -63,12 +83,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     auto waitResult = WaitForSingleObject(mutex, 0);
     if (waitResult != WAIT_OBJECT_0 && waitResult != WAIT_ABANDONED) {
-        MessageBoxA(0, "Could not launch game.\nOnly one instance of this game can be run at a time.", "Error", MB_OK | MB_ICONERROR);
+        MessageBoxA(NULL, "Could not launch game.\nOnly one instance of this game can be run at a time.", "Error", MB_OK | MB_ICONERROR);
         return 0;
     }
 
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 0), &wsaData);
+    registry->Init("Half-Life");
     CommandLine()->CreateCmdLine(GetCommandLineA());
     bool runningSteam = CommandLine()->CheckParm("-steam") != nullptr;
     
@@ -93,10 +114,37 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     _unlink("mp3dec.asi");
     _unlink("opengl32.dll");
 
-    // TODO: Registry
+    if (registry->ReadInt("CrashInitializingVideoMode", 0)) {
+        registry->WriteInt("CrashInitializingVideoMode", 0);
+        auto registryEngineDll = registry->ReadString("EngineDLL", "hw.dll");
+        if (!_strcmpi(registryEngineDll, "hw.dll")) {
+            int dialogResult = 0;
 
-    InitializeDetour();
-    SetupLibraryHooks();
+            if (registry->ReadInt("EngineD3D", 0)) {
+                registry->WriteInt("EngineD3D", 0);
+                dialogResult = MessageBoxA(NULL,
+                    "The game has detected that the previous attempt to start in D3D video mode failed.\nThe game will now run attempt to run in openGL mode.",
+                    "Video mode change failure",
+                    MB_OKCANCEL | MB_ICONWARNING);
+            }
+            else {
+                registry->WriteString("EngineDLL", "sw.dll");
+                dialogResult = MessageBoxA(NULL,
+                    "The game has detected that the previous attempt to start in openGL video mode failed.\nThe game will now run in software mode.",
+                    "Video mode change failure",
+                    MB_OKCANCEL | MB_ICONWARNING);
+            }
+
+            if (dialogResult != 1) {
+                return 0;
+            }
+
+            registry->WriteInt("ScreenBPP", 16);
+            registry->WriteInt("ScreenHeight", 640);
+            registry->WriteInt("ScreenWidth", 480);
+        }
+    }
+
     bool shouldRestart = false;
     do {
         auto fileSystemModule = LoadFilesystemModule(baseDir, runningSteam);
@@ -113,9 +161,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         if (engineModule == nullptr) {
             char msg[512];
             sprintf(msg, "Could not load %s.\nPlease try again at a later time.", engineDll);
-            MessageBoxA(0, msg, "Fatal Error", 0x10u);
+            MessageBoxA(0, msg, "Fatal Error", MB_OK | MB_ICONERROR);
+            break;
         }
-        SetupEngineHooks(engineModule);
+
+        if (!InitializeHooks(engineModule)) {
+            MessageBoxA(0, "Could not install hooks", "Fatal Error", MB_OK | MB_ICONERROR);
+            break;
+        }
 
         int engineResult = ENGINE_RESULT_NONE;
         static char newCommandParams[2048];
@@ -154,7 +207,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         CommandLine()->RemoveParm("-h");
         CommandLine()->RemoveParm("-height");
         CommandLine()->RemoveParm("+connect");
-        CommandLine()->SetParm("-novid", 0);
+        CommandLine()->RemoveParm("-novid");
+        CommandLine()->AppendParm("-novid", nullptr);
         if (strstr(newCommandParams, "-game")) {
             CommandLine()->RemoveParm("-game");
         }
@@ -163,12 +217,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         }
         CommandLine()->AppendParm(newCommandParams, nullptr);
 
+        ShutdownHooks(engineModule);
         Sys_UnloadModule(engineModule);
         fileSystem->Unmount();
         Sys_UnloadModule(fileSystemModule);
     } while (shouldRestart);
 
-    ShutdownDetour();
+    registry->Shutdown();
     ReleaseMutex(mutex);
     CloseHandle(mutex);
     WSACleanup();
