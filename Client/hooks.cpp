@@ -17,6 +17,9 @@ static constexpr const uint8 NET_StringToAdrPattern[] =
 static constexpr const uint8 NET_AdrToStringPattern[] =
 { 0x55, 0x8B, 0xEC, 0x6A, 0x40, 0x6A, 0x00, 0x68, 0xCC, 0xCC, 0xCC, 0xCC, 0xE8, 0x2F, 0x22, 0xFC, 0xFF, 0x8B, 0x45, 0x08, 0x83, 0xC4, 0x0C, 0x83, 0xF8, 0x01, 0x75, 0x1B };
 
+static constexpr const uint8 SV_CheckIPRestrictionsPattern[] =
+{ 0x55, 0x8B, 0xEC, 0xD9, 0x05, 0xCC, 0xCC, 0xCC, 0xCC, 0xD8, 0x1D, 0xCC, 0xCC, 0xCC, 0xCC, 0x53, 0x56, 0x57, 0xDF, 0xE0, 0xF6, 0xC4, 0x44, 0x8B, 0x45 };
+
 class SteamAPIContext  {
 public:
     bool Init();
@@ -171,6 +174,17 @@ char* NET_AdrToString(netadr_t a) {
     return buf;
 }
 
+typedef int (*tSV_CheckIPRestrictions)(netadr_t* adr, int nAuthProtocol);
+static tSV_CheckIPRestrictions _SV_CheckIPRestrictions;
+
+int SV_CheckIPRestrictions(netadr_t* adr, int nAuthProtocol) {
+    if (adr->type == NA_IP && adr->port == htons(P2P_PORT)) {
+        return true;
+    }
+
+    return _SV_CheckIPRestrictions(adr, nAuthProtocol);
+}
+
 static uint8* ScanPattern(uint8* start, int size, const uint8* pattern, int patternLen) {
     auto comp = [](uint8* i, const uint8* pattern, int patternLen) {
         for (auto j = 0; j < patternLen; ++j) {
@@ -214,24 +228,33 @@ bool InitializeHooks(CSysModule* engineModule) {
         return false;
     }
 
-    HookIAT(engineModule, "wsock32.dll", nullptr, RECVFROM_ORDINAL, RecvFrom);
-    HookIAT(engineModule, "wsock32.dll", nullptr, SENDTO_ORDINAL, SendTo);
-    HookIAT(engineModule, "steam_api.dll", "SteamAPI_Init", 0, SteamInit);
-    HookIAT(engineModule, "steam_api.dll", "SteamAPI_Shutdown", 0, SteamShutdown);
+    if (!HookIAT(engineModule, "wsock32.dll", nullptr, RECVFROM_ORDINAL, RecvFrom) ||
+        !HookIAT(engineModule, "wsock32.dll", nullptr, SENDTO_ORDINAL, SendTo) ||
+        !HookIAT(engineModule, "steam_api.dll", "SteamAPI_Init", 0, SteamInit) ||
+        !HookIAT(engineModule, "steam_api.dll", "SteamAPI_Shutdown", 0, SteamShutdown)) {
+        return false;
+    }
 
     auto NET_StringToAdrAddr = ScanPattern(engineModule, NET_StringToAdrPattern, sizeof(NET_StringToAdrPattern));
-    if (NET_StringToAdrAddr != nullptr)
-    {
-        _NET_StringToAdr = (tNET_StringToAdr)detour->CreateHook(NET_StringToAdrAddr, NET_StringToAdr);
-        detour->EnableHook(_NET_StringToAdr);
+    if (NET_StringToAdrAddr == nullptr) {
+        return false;
     }
+    _NET_StringToAdr = (tNET_StringToAdr)detour->CreateHook(NET_StringToAdrAddr, NET_StringToAdr);
+    detour->EnableHook(_NET_StringToAdr);
 
     auto NET_AdrToStringAddr = ScanPattern(engineModule, NET_AdrToStringPattern, sizeof(NET_AdrToStringPattern));
-    if (NET_AdrToStringAddr != nullptr)
-    {
-        _NET_AdrToString = (tNET_AdrToString)detour->CreateHook(NET_AdrToStringAddr, NET_AdrToString);
-        detour->EnableHook(_NET_AdrToString);
+    if (NET_AdrToStringAddr == nullptr) {
+        return false;
     }
+    _NET_AdrToString = (tNET_AdrToString)detour->CreateHook(NET_AdrToStringAddr, NET_AdrToString);
+    detour->EnableHook(_NET_AdrToString);
+
+    auto SV_CheckIPRestrictionsAddr = ScanPattern(engineModule, SV_CheckIPRestrictionsPattern, sizeof(SV_CheckIPRestrictionsPattern));
+    if (SV_CheckIPRestrictionsAddr == nullptr) {
+        return false;
+    }
+    _SV_CheckIPRestrictions = (tSV_CheckIPRestrictions)detour->CreateHook(SV_CheckIPRestrictionsAddr, SV_CheckIPRestrictions);
+    detour->EnableHook(_SV_CheckIPRestrictions);
 
     return true;
 }
