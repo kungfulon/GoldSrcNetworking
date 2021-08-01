@@ -74,7 +74,7 @@ int WSAAPI SendTo(SOCKET s, const char* buf, int len, int flags, const struct so
     steamID.Set(addr->sin_addr.S_un.S_addr, k_EUniversePublic, k_EAccountTypeIndividual);
     SteamNetworkingIdentity identity;
     identity.SetSteamID(steamID);
-    auto result = steam.SteamNetworkingMessages()->SendMessageToUser(identity, buf, len, k_nSteamNetworkingSend_Reliable | k_nSteamNetworkingSend_AutoRestartBrokenSession, 0);
+    auto result = steam.SteamNetworkingMessages()->SendMessageToUser(identity, buf, len, k_nSteamNetworkingSend_Unreliable | k_nSteamNetworkingSend_AutoRestartBrokenSession, 0);
     if (result != k_EResultOK) {
         WSASetLastError(WSAECONNREFUSED);
         return SOCKET_ERROR;
